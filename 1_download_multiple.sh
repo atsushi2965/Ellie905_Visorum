@@ -60,10 +60,10 @@ while IFS= read -r url; do
 
     #if yt-dlp --cookies-from-browser firefox --embed-metadata --embed-thumbnail "$url"; then
     #--cookies-from-browser firefox \
+    #--remote-components ejs:github \
+    #--js-runtimes deno:~/.deno/bin/deno \
     if yt-dlp \
         -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/bv*+ba/b" \
-        --remote-components ejs:github \
-        --js-runtimes deno:~/.deno/bin/deno \
         --write-thumbnail \
         --convert-thumbnails jpg \
         --embed-thumbnail \
