@@ -49,12 +49,12 @@ while IFS= read -r url; do
         continue
     fi
 
-    if ! mkdir -p "$video_id"; then
+    if ! mkdir -p -- "$video_id"; then
         echo "Failed to create folder $video_id, skipping."
         continue
     fi
 
-    cd "$video_id" || continue
+    cd -- "$video_id" || continue
 
     echo "Downloading: $url to $video_id"
 
