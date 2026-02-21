@@ -1,0 +1,10 @@
+#!/usr/bin/env xdg-open
+[Desktop Entry]
+Type=Application
+Name=Visorum
+Comment=Local video catalog browser
+Exec=absolute/path/to/visorum
+Icon=absolute/path/to/visorum # no .ico extension
+Terminal=false
+Categories=Multimedia;
+StartupWMClass=visorum

@@ -1,0 +1,210 @@
+#!/usr/bin/env python3
+"""
+YouTube video catalog generator (Pipeline Step 4)
+
+Layout assumed:
+
+yt-dlp/
+  <genre>/
+    <video_id>/
+      <title> [<video_id>].mp4
+      <title> [<video_id>].json
+
+Outputs (if and only if no failures):
+- catalog.json (canonical)
+- catalog.md   (derived)
+
+On ANY failure:
+- writes index_fails.txt
+- does NOT generate catalog outputs
+"""
+
+import json
+import re
+import sys
+from pathlib import Path
+from datetime import datetime
+
+# ---------------------------
+# Configuration
+# ---------------------------
+
+VIDEO_EXTENSIONS = {".mp4", ".mkv", ".webm"}
+VIDEO_ID_REGEX = re.compile(r"\[([A-Za-z0-9_-]{11})\]")
+
+CATALOG_JSON_NAME = "catalog.json"
+CATALOG_MD_NAME = "catalog.md"
+FAIL_LOG_NAME = "index_fails.txt"
+
+# ---------------------------
+# Helpers
+# ---------------------------
+
+def is_video_file(path: Path) -> bool:
+    return path.is_file() and path.suffix.lower() in VIDEO_EXTENSIONS
+
+
+def extract_video_id(filename: str) -> str:
+    match = VIDEO_ID_REGEX.search(filename)
+    if not match:
+        raise ValueError("Could not find YouTube video ID in filename")
+    return match.group(1)
+
+
+def normalize_path(path: Path) -> str:
+    """Return POSIX-style relative path string."""
+    return path.as_posix()
+
+
+def load_json(path: Path) -> dict | None:
+    try:
+        with path.open("r", encoding="utf-8") as f:
+            return json.load(f)
+    except Exception:
+        return None
+
+
+# ---------------------------
+# Core logic
+# ---------------------------
+
+def main() -> int:
+    script_dir = Path(__file__).resolve().parent
+    repo_root = script_dir.parent  # ~/Videos/yt-dlp
+
+    failures: list[str] = []
+    videos: dict[str, dict] = {}
+
+    # Walk genres
+    for genre_dir in sorted(p for p in repo_root.iterdir() if p.is_dir()):
+        if genre_dir.name == script_dir.name:
+            continue  # skip "1 New Downloads"
+
+        genre = genre_dir.name
+
+        # Walk per-video folders
+        for video_dir in sorted(p for p in genre_dir.iterdir() if p.is_dir()):
+            video_files = [p for p in video_dir.iterdir() if is_video_file(p)]
+            json_files = [p for p in video_dir.iterdir() if p.suffix == ".json"]
+
+            if not video_files or not json_files:
+                failures.append(str(video_dir.relative_to(repo_root)))
+                continue
+
+            video_path = sorted(video_files)[0]
+            sidecar_path = sorted(json_files)[0]
+
+            video_id = extract_video_id(video_path.name)
+            if not video_id:
+                failures.append(video_path.name)
+                continue
+
+            sidecar_data = load_json(sidecar_path)
+            if not sidecar_data:
+                failures.append(video_path.name)
+                continue
+
+            title = sidecar_data.get("title")
+            uploader = sidecar_data.get("uploader") or sidecar_data.get("channel")
+            upload_date = sidecar_data.get("upload_date")
+            duration = sidecar_data.get("duration_seconds")
+
+            if not title or not uploader:
+                failures.append(video_path.name)
+                continue
+
+            videos[video_id] = {
+                "id": video_id,
+                "title": title,
+                "uploader": uploader,
+                "genre": genre,
+                "upload_date": upload_date,
+                "duration": duration,
+                "path": normalize_path(video_path.relative_to(repo_root)),
+            }
+
+    # ---------------------------
+    # Failure handling
+    # ---------------------------
+
+    fail_log = script_dir / FAIL_LOG_NAME
+    if failures:
+        with fail_log.open("w", encoding="utf-8") as f:
+            for item in sorted(failures):
+                f.write(item + "\n")
+
+        print(f"[ERROR] {len(failures)} failures detected. See {FAIL_LOG_NAME}")
+        return 1
+
+    if fail_log.exists():
+        fail_log.unlink()
+
+    # ---------------------------
+    # Build indexes
+    # ---------------------------
+
+    by_genre: dict[str, list[str]] = {}
+    by_uploader: dict[str, list[str]] = {}
+
+    for vid, record in videos.items():
+        by_genre.setdefault(record["genre"], []).append(vid)
+        by_uploader.setdefault(record["uploader"], []).append(vid)
+
+    for index in (by_genre, by_uploader):
+        for key in index:
+            index[key].sort()
+
+    # ---------------------------
+    # Write catalog.json (canonical)
+    # ---------------------------
+
+    catalog_json = {
+        "generated_at": datetime.utcnow().isoformat() + "Z",
+        "videos": dict(sorted(videos.items())),
+        "by_genre": dict(sorted(by_genre.items())),
+        "by_uploader": dict(sorted(by_uploader.items())),
+    }
+
+    json_path = script_dir / CATALOG_JSON_NAME
+    with json_path.open("w", encoding="utf-8") as f:
+        json.dump(catalog_json, f, indent=2, sort_keys=True)
+
+    # ---------------------------
+    # Write catalog.md (derived)
+    # ---------------------------
+
+    md_path = script_dir / CATALOG_MD_NAME
+    with md_path.open("w", encoding="utf-8") as f:
+        f.write("# Video Catalog\n\n")
+
+        f.write("## Videos by Genre\n\n")
+        for genre in sorted(by_genre):
+            f.write(f"### {genre}\n\n")
+            for vid in by_genre[genre]:
+                v = videos[vid]
+                f.write(
+                    f"- **{v['title']}**  \n"
+                    f"  Uploader: {v['uploader']}  \n"
+                    f"  Uploaded: {v['upload_date']}  \n"
+                    f"  Duration: {v['duration_seconds']}s  \n"
+                    f"  [Watch](../{v['path']})\n\n"
+                )
+
+        f.write("## Videos by Uploader\n\n")
+        for uploader in sorted(by_uploader):
+            f.write(f"### {uploader}\n\n")
+            for vid in by_uploader[uploader]:
+                v = videos[vid]
+                f.write(
+                    f"- **{v['title']}** ({v['genre']})  \n"
+                    f"  Uploaded: {v['upload_date']}  \n"
+                    f"  Duration: {v['duration_seconds']}s  \n"
+                    f"  [Watch](../{v['path']})\n\n"
+                )
+
+    print("[OK] Catalog generated successfully.")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
