@@ -70,7 +70,7 @@ while IFS= read -r url; do
         --embed-metadata \
         --write-subs \
         --write-auto-subs \
-        --sub-langs en \
+        --sub-langs en.* \
         --sub-format vtt \
         -P "$video_id" \
         "$url";

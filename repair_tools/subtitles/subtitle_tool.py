@@ -31,7 +31,7 @@ def subtitles_exist(video_dir: Path, video_id: str) -> bool:
         if (
             file.is_file()
             and file.suffix == SUB_EXT
-            and f".{SUB_LANG}." in file.name
+            and f".{SUB_LANG}" in file.name
             and f"[{video_id}]" in file.name
         ):
             return True
@@ -48,7 +48,7 @@ def fetch_subtitles(video_dir: Path, video_id: str) -> bool:
         "--skip-download",
         "--write-subs",
         "--write-auto-subs",
-        "--sub-langs", SUB_LANG,
+        "--sub-langs", f"{SUB_LANG}.*",
         "--sub-format", "vtt",
         "--", video_id,
     ]
