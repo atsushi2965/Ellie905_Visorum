@@ -103,6 +103,7 @@ def embed_thumbnail_mkv(video_path: Path, thumb_path: Path):
         "-c", "copy",
         "-metadata:s:t", "mimetype=image/jpeg",
         "-metadata:s:t", "filename=cover.jpg",
+        "-movflags", "+faststart",
         str(tmp_path),
     ]
 

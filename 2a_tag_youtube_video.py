@@ -27,13 +27,11 @@ def sanitize_filename(name: str) -> str:
 # -----------------------------
 
 def fetch_metadata_cookies(video_id: str) -> dict:
-    url = f"https://www.youtube.com/watch?v={video_id}"
-
     cookies = Path(__file__).parent.resolve()
     cookies = cookies / Path("cookies.firefox-private.txt")
 
     result = subprocess.run(
-        ["yt-dlp", "-j", "--cookies", cookies, url],
+        ["yt-dlp", "-j", "--cookies", cookies, "--", video_id],
         capture_output=True,
         text=True
     )
@@ -44,11 +42,9 @@ def fetch_metadata_cookies(video_id: str) -> dict:
     return json.loads(result.stdout)
 
 def fetch_metadata(video_id: str) -> dict:
-    url = f"https://www.youtube.com/watch?v={video_id}"
-
     #, "--cookies-from-browser", "firefox",
     result = subprocess.run(
-        ["yt-dlp", "-j", url],
+        ["yt-dlp", "-j", "--", video_id],
         capture_output=True,
         text=True
     )
@@ -131,7 +127,7 @@ def embed_metadata_webm(video_path: Path, metadata: dict):
         ffmpeg_cmd += ["-metadata", f"artist={uploader}"]
 
     temp_out = video_path.with_suffix(".tagged" + video_path.suffix)
-    ffmpeg_cmd += ["-map_metadata", "0", "-c", "copy", str(temp_out)]
+    ffmpeg_cmd += ["-map_metadata", "0", "-c", "copy", "-movflags", "+faststart", str(temp_out)]
 
     subprocess.run(ffmpeg_cmd, check=True)
     temp_out.replace(video_path)
