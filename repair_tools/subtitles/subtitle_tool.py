@@ -31,14 +31,14 @@ def subtitles_exist(video_dir: Path, video_id: str) -> bool:
         if (
             file.is_file()
             and file.suffix == SUB_EXT
-            and f".{SUB_LANG}." in file.name
+            and f".{SUB_LANG}" in file.name
             and f"[{video_id}]" in file.name
         ):
             return True
     return False
 
 
-def fetch_subtitles(video_dir: Path, url: str, video_id: str) -> bool:
+def fetch_subtitles(video_dir: Path, video_id: str) -> bool:
     """
     Invoke yt-dlp to fetch subtitles only
     """
@@ -48,10 +48,9 @@ def fetch_subtitles(video_dir: Path, url: str, video_id: str) -> bool:
         "--skip-download",
         "--write-subs",
         "--write-auto-subs",
-        "--sub-langs", SUB_LANG,
+        "--sub-langs", f"{SUB_LANG}.*",
         "--sub-format", "vtt",
-        "-o", "%(title)s [%(id)s].%(ext)s",
-        url,
+        "--", video_id,
     ]
 
     subprocess.run(cmd, cwd=video_dir, check=False)
@@ -85,7 +84,7 @@ def process_video_dir(video_dir: Path):
         return
 
     print(f"    ⬇ Fetching subtitles for {video_id}")
-    if not fetch_subtitles(video_dir, url, video_id):
+    if not fetch_subtitles(video_dir, video_id):
         SKIPPED.append(f"yt-dlp failure, skipped: {video_id}")
 
 

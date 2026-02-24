@@ -98,7 +98,6 @@ def resolve_thumbnail(video_dir: Path, video_path: Path, video_id: str) -> str:
    
     # 3. MP4
     if video_path.suffix.lower() == ".mp4":
-        url = f"https://www.youtube.com/watch?v={video_id}"
         try:
             subprocess.run(
                 [
@@ -106,9 +105,8 @@ def resolve_thumbnail(video_dir: Path, video_path: Path, video_id: str) -> str:
                     "--skip-download",
                     "--convert-thumbnails", "jpg",
                     "--write-thumbnail",
-                    "--output",
-                    str(video_dir / f"%(title)s [{video_id}].%(ext)s"),
-                    url,
+                    "-P", str(video_dir),
+                    "--", video_id,
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,
@@ -127,7 +125,6 @@ def resolve_thumbnail(video_dir: Path, video_path: Path, video_id: str) -> str:
 
     # 4. MKV
     if video_path.suffix.lower() == ".mkv":
-        url = f"https://www.youtube.com/watch?v={video_id}"
         try:
             subprocess.run(
                 [
@@ -135,9 +132,8 @@ def resolve_thumbnail(video_dir: Path, video_path: Path, video_id: str) -> str:
                     "--skip-download",
                     "--convert-thumbnails", "jpg",
                     "--write-thumbnail",
-                    "--output",
-                    str(video_dir / f"%(title)s [{video_id}].%(ext)s"),
-                    url,
+                    "-P", str(video_dir),
+                    "--", video_id,
                 ],
                 stdout=subprocess.DEVNULL,
                 stderr=subprocess.DEVNULL,

@@ -55,8 +55,6 @@ while IFS= read -r url; do
         continue
     fi
 
-    cd -- "$video_id" || continue
-
     echo "Downloading: $url to $video_id"
 
     #if yt-dlp --cookies-from-browser firefox --embed-metadata --embed-thumbnail "$url"; then
@@ -64,7 +62,7 @@ while IFS= read -r url; do
     #--remote-components ejs:github \
     #--js-runtimes deno:~/.deno/bin/deno \
     if yt-dlp \
-        -f "bv*[ext=mp4]+ba*[ext=m4a]/b[ext=mp4]/bv*+ba/b" \
+        -t mp4 \
         --cookies "$COOKIE_FILE" \
         --write-thumbnail \
         --convert-thumbnails jpg \
@@ -72,9 +70,9 @@ while IFS= read -r url; do
         --embed-metadata \
         --write-subs \
         --write-auto-subs \
-        --sub-langs en \
+        --sub-langs en.* \
         --sub-format vtt \
-        -o "%(title)s [%(id)s].%(ext)s" \
+        -P "$video_id" \
         "$url";
     then
         SEEN_IDS["$video_id"]=1
@@ -82,8 +80,6 @@ while IFS= read -r url; do
         echo "Failed: $url"
         echo "$url" >> "$FAILED_FILE"
     fi
-
-    cd $SCRIPT_DIR
 
 done < "$URL_FILE"
 
