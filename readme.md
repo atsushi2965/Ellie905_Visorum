@@ -1,4 +1,4 @@
-# Visorum Archival Tooling
+# <img src="visorum.ico" width="32" height="32"> Visorum Archival Tooling
 
 This repository contains a **YouTube archival pipeline** built around `yt-dlp`, Bash, and Python.
 
@@ -250,23 +250,26 @@ Each video must exist in exactly one category (to prevent gui browser duplicates
 
 ---
 
-### Step 5: Catalog Generation
+### Step 5: Catalog Generation (Manual)
 
 Produces a machine-readable catalog.
+
+Note: You have to redo this step after you download more videos, if you want the new videos to appear in the GUI browser (next step).
 
 ```bash
 python3 5_generate_catalog.py
 ```
 
 * Outputs `catalog.json`
-* Required for GUI browsers
+* Required for GUI browser
 * Supports `.mp4`, `.webm`, `.mkv`, videos and `.jpg`, `.jpeg` thumbnails
 
 ---
 
 ### Step 6: Browse
 
-Browsing is handled by external software such as **Visorum GUI**.
+Browsing is handled by external software such as **[Visorum GUI](https://github.com/Ellie905/Visorum-gui)**.
+More details below.
 
 ---
 
@@ -322,7 +325,7 @@ Future releases may change output formats.
 
 ## Pre-built Binary
 
-A pre-built Visorum gui binary is included with the tools inside `1_New_Downloads/`.
+A pre-built Visorum GUI binary/appimage is included with the tools inside `1_New_Downloads/`.
 
 - Built on Ubuntu 22.04
 - Provided for convenience
@@ -332,6 +335,8 @@ If the binary runs on your system, no build step is required.
 
 If it does not run (e.g. due to libc or system compatibility),
 use the provided source archive and follow the included build instructions.
+
+Here is a [link](https://github.com/Ellie905/Visorum-gui) to the github repo for the GUI browser which also has the build instructions.
 
 ---
 
