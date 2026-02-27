@@ -238,7 +238,7 @@ If a failure occurs in Steps 1 - 3, these steps can be reran out of order and th
 
 ---
 
-### Step 4: Sort (Manual)
+### Step 4: Sort (Manual or Interactive)
 
 Move each `<video_id>` folder into a category:
 
@@ -247,6 +247,8 @@ yt-dlp/1_New_Downloads/<video_id> → yt-dlp/<category_name>/<video_id>
 ```
 
 Each video must exist in exactly one category (to prevent gui browser duplicates).
+
+There is now an interactive CLI tool (automatically ran after Step 3) to help you sort into the correct folders. The script will inform you if no suitable folders exist, and you can still manually sort if you'd prefer. If you successfully sort your new downloads with the interactive tool, Step 5 will run automatically. 
 
 ---
 

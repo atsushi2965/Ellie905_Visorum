@@ -20,6 +20,10 @@ should_skip() {
     return 1
 }
 
+
+echo ""
+echo "-------------------------"
+
 # Iterate only over immediate subdirectories
 find "$ROOT_DIR" -mindepth 1 -maxdepth 1 -type d -print0 |
 while IFS= read -r -d '' dir; do
@@ -48,3 +52,10 @@ echo "Batch tagging complete."
 
 # Generate new manifest file
 python3 3_manifest.py
+
+# Ask for sort step
+read -rp "Step 3 complete. Sort now? (Y/n): " answer
+if [[ "${answer:-Y}" =~ ^[Nn]$ ]]; then
+    exit 0
+fi
+./4_sort.sh
